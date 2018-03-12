@@ -1,0 +1,24 @@
+<template name="page">
+    <custom-layout title="My Page">
+        <p>1. Page content here</p>
+        <p>2. More page content</p>
+        <p>3. Map reference {{ = foo.bar || 'default val' }}</p>
+        <p>4. Array of tags: {{ = Implode('; ', tags) }}</p>
+
+        <fancy-header title="{{ = foo.bar }}" sub-title="Hardcoded"></fancy-header>
+
+        <template is="foreach" data="{{ = tags }}">
+            <p>5.x. {{ = item }}</p>
+        </template>
+
+        <template if="{{ = NotEmpty(tags) }}">
+            <p>Tags was not empty!</p>
+        </template>
+
+        <template if="{{ = Empty(tags) }}">
+            <p>Tags was empty!</p>
+        </template>
+
+        <p>6. Nested calls: {{ = NotEmpty( Implode('; ', Explode(' ', message)) )}}</p>
+    </custom-layout>
+</template>

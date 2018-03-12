@@ -1,0 +1,7 @@
+<template name="example">
+    <div>Hello {{ = name || 'world' }}!</div>
+
+    <template is="foreach" data="{{ = tags }}" as="tag">
+        <p>Repeat me {{ = tag }}</p>
+    </template>
+</template>

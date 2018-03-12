@@ -1,0 +1,15 @@
+<template name="base-document">
+    <html>
+        <head>
+            <slot name="head-styles"></slot>
+            <slot name="head-scripts"></slot>
+
+            <title>{{ = title || 'Untitled' }}</title>
+        </head>
+        <body>
+            <slot></slot>
+
+            <slot name="body-scripts"></slot>
+        </body>
+    </html>
+</template>
