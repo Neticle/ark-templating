@@ -27,7 +27,7 @@ Using this definition we can then use our custom element within another template
 ```xml
 <template name="my-custom-page">
     <div class="content">
-        <my-custom-element message="{{ = myMessage }}"></my-custom-element>
+        <my-custom-element message="{{ myMessage }}"></my-custom-element>
         <my-custom-element message="My hardcoded message"></my-custom-element>
         <my-custom-element></my-custom-element>
     </div>
@@ -106,8 +106,8 @@ There are a few elements that are handled specially when used within a custom el
 ### For Each
 
 ```xml
-<template is="foreach" data="{{ = menuEntries }}" as="entry">
-    <a href="{{ = entry.key }}">{{ = entry.value }}</a>
+<template is="foreach" data="{{ menuEntries }}" as="entry">
+    <a href="{{ entry.key }}">{{ = entry.value }}</a>
 </template>
 ```
 
@@ -118,7 +118,7 @@ The `as` attribute is optional, defaults to `item`.
 ### If Condition
 
 ```xml
-<template if="{{ = foo.active }}">
+<template if="{{ foo.active }}">
     <p>Foo is active!</p>
 </template>
 ```
