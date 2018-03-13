@@ -25,6 +25,11 @@ public class ImplodeFunction extends DefaultFunctionHandler<String>
     {
         String delimiter = nonNullArgument(args, 0, String.class);
 
+        if(args[1] == null)
+        {
+            return "";
+        }
+
         if(args.length == 2 && args[0] instanceof String && args[1] instanceof Iterable)
         {
             return implode(delimiter, ((Iterable<Object>) args[1]).spliterator());

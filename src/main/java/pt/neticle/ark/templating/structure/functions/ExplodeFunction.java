@@ -18,6 +18,11 @@ public class ExplodeFunction extends DefaultFunctionHandler<String[]>
     @Override
     public String[] apply (Object[] args) throws RenderingException
     {
+        if(args[1] == null)
+        {
+            return new String[0];
+        }
+
         ensureSignatureArgs(args, false, String.class, String.class);
 
         return ((String)args[1]).split((String)args[0]);
