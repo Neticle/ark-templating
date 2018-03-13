@@ -136,26 +136,29 @@ public class Renderer extends BaseRenderer
 
             // All attributes defined on the declaration element are passed to the new scope
             newScope.putAll(element.attributes()
-                .collect(Collectors.toMap(
-                    (a) -> a.getName(),
-                    (a) -> {
+                .collect
+                (
+                    HashMap::new,
+                    (m, a) ->
+                    {
                         if(a.getValue() instanceof TemplateExpressionText)
                         {
                             Expression exp = ((TemplateExpressionText) a.getValue()).getExpressionIfOnlySegment();
 
                             if(exp != null)
                             {
-                                return exp.resolve(scope);
-                            }
-                            else
+                                m.put(a.getName(), exp.resolve(scope));
+                            } else
                             {
-                                return ((TemplateExpressionText) a.getValue()).getContent(scope);
+                                m.put(a.getName(), ((TemplateExpressionText) a.getValue()).getContent(scope));
                             }
+                            return;
                         }
 
-                        return a.getValue().getContent();
-                    }
-                ))
+                        m.put(a.getName(), a.getValue().getContent());
+                    },
+                    HashMap::putAll
+                )
             );
 
             // Check requested slots from the template
@@ -343,6 +346,12 @@ public class Renderer extends BaseRenderer
         }
 
         Object result = dataEx.resolve(scope);
+
+        if(result == null)
+        {
+            return;
+        }
+
         Stream<Object> objects;
 
         if(result instanceof Iterable)
