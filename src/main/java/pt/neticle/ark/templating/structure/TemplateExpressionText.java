@@ -26,7 +26,7 @@ public class TemplateExpressionText extends TemplateText
         Matcher m;
         while((m = refCheck.matcher(content)).find())
         {
-            Expression expHandler = templateRoot.createExpression(m.group(1));
+            Expression expHandler = templateRoot.createExpression(m.group(1).trim());
             if(expHandler != null)
             {
                 addSegment(new Segment(Segment.Type.TEXT, content.substring(0, m.start(1) - 2)));
