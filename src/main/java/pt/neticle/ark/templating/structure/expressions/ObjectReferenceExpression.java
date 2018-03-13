@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Matches a reference expression such as <var> or <var1>.<var2>
+ * Matches a reference expression such as [var] or [var1].[var2]
  * Variable names may contain any alphanumeric characters and underscores. Dots shall be used
  * as separators for referencing members of the previous reference.
  *

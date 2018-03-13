@@ -8,10 +8,10 @@ import java.util.regex.Pattern;
 
 /**
  * Matches an expression that starts with '=' or '~' and has optionally a default value, such
- * as: = <main-expression> || <default-expression>
+ * as: = [main-expression] || [default-expression]
  *
- * The '=' operator indicates that the resulting output should be escaped - so '<' and '>' should
- * be replaced with '&lt' and '&gt' respectively.
+ * The '=' operator indicates that the resulting output should be escaped - so lesser/greater than
+ * characters should be replaced with html entities.
  *
  * The '~' operator indicates that no escaping should be done on the resulting output.
  */

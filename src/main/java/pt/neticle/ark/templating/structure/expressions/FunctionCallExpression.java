@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A function call expression matches a signature such as <function-name>([<argument-expression>,...])
+ * A function call expression matches a signature such as [function-name]([[argument-expression],...])
  */
 public class FunctionCallExpression implements Expression
 {

@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Matches a string literal expression such as '<content>'
+ * Matches a string literal expression such as '[content]'
  * All string literals must be surrounded by single-quotes. Any single-quotes that are part of
  * the string content must be escaped like this: \'
  */

@@ -49,7 +49,7 @@ public class TemplatingEngine
      * Attempts to parse and register a new template for a user-defined custom element type.
      *
      * @param is An inputstream containing the template as valid XML and encapsulated in a
-     * <template> node
+     * template node
      *
      * @return The tag-name of the newly defined custom element type.
      *
