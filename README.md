@@ -158,6 +158,18 @@ Functions can be invoked within an expression like this: `{{ = Explode(' ', mess
 
 # Usage
 
+## Setup
+
+Ark Templating is available in the maven central repository. Add the following dependency to your `pom.xml` file:
+
+```xml
+<dependency>
+    <groupId>pt.neticle.ark</groupId>
+    <artifactId>ark-templating</artifactId>
+    <version>0.1.0</version>
+</dependency>
+``` 
+
 ## Creating a template engine instance with auto-discovery
 
 ```java
