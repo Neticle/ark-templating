@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class StringLiteralExpression implements Expression
 {
-    private static final Pattern pt = Pattern.compile("'(\\\\.|[^'])*'"/*"^'([^'\\n\\r]*)?'$"*/);
+    private static final Pattern pt = Pattern.compile("^'(\\\\.|[^'])*'$"/*"^'([^'\\n\\r]*)?'$"*/);
 
     private final String content;
 
