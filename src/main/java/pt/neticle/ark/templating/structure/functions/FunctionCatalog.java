@@ -22,6 +22,7 @@ public class FunctionCatalog
         registerHandler(new EqualsFunction());
         registerHandler(new NotEqualsFunction());
         registerHandler(new GetFunction());
+        registerHandler(new IfFunction());
     }
 
     public void registerHandler (String name, FunctionHandler handler)

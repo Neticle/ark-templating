@@ -1,6 +1,7 @@
 package pt.neticle.ark.templating.structure;
 
 import pt.neticle.ark.templating.TemplatingEngine;
+import pt.neticle.ark.templating.processing.PreprocessedInstructionSet;
 import pt.neticle.ark.templating.structure.expressions.Expression;
 
 import java.text.ParseException;
@@ -13,6 +14,7 @@ public class TemplateRootElement extends TemplateElement
     private final Map<String, String> metaData;
     private final TemplatingEngine engine;
     private ReadableElement catchUnassignedSlot = null;
+    private PreprocessedInstructionSet instructionSet;
 
     public TemplateRootElement (TemplatingEngine engine)
     {
@@ -26,9 +28,19 @@ public class TemplateRootElement extends TemplateElement
         setTagName("template");
     }
 
+    public void prepare ()
+    {
+        instructionSet = new PreprocessedInstructionSet(engine, this);
+    }
+
     public TemplatingEngine getEngine ()
     {
         return engine;
+    }
+
+    public PreprocessedInstructionSet getInstructionSet ()
+    {
+        return instructionSet;
     }
 
     public Expression createExpression (String text) throws ParseException

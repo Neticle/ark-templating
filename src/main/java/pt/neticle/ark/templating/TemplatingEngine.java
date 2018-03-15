@@ -1,8 +1,9 @@
 package pt.neticle.ark.templating;
 
 import org.xml.sax.SAXException;
+import pt.neticle.ark.templating.functional.CheckedFunction;
 import pt.neticle.ark.templating.parsing.TemplateParser;
-import pt.neticle.ark.templating.renderer.Renderer;
+import pt.neticle.ark.templating.renderer.PreprocessedRenderer;
 import pt.neticle.ark.templating.renderer.Scope;
 import pt.neticle.ark.templating.structure.ReadableElement;
 import pt.neticle.ark.templating.structure.TemplateRootElement;
@@ -11,9 +12,10 @@ import pt.neticle.ark.templating.structure.functions.FunctionCatalog;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The main object of the ark-templating library. It contains all registered templates as well as
@@ -25,11 +27,39 @@ import java.util.*;
  */
 public class TemplatingEngine
 {
+
+    /**
+     * The template parser in use.
+     */
     private final TemplateParser templateParser;
+
+    /**
+     * The expression matcher in use.
+     */
     private final ExpressionMatcher expressionMatcher;
 
-    private final Map<String, ReadableElement> rootElementsRegistry;
+    /**
+     * Key: Template's qualified name
+     * Value: Template's root element
+     */
+    private final Map<String, TemplateRootElement> rootElementsRegistry;
+
+    /**
+     * Key: Template's qualified name
+     * Value: A k-v map of meta-data passed from the template's declaration. Everything as a string.
+     */
     private final Map<String, Map<String,String>> rootElementsMetaData;
+
+    /**
+     * Key: Template's qualified name
+     * Value: Timestamp in milliseconds of the template's registering time (not pre-processing time!)
+     */
+    private final Map<String, Long> registryTimestamps;
+
+    /**
+     * Last time the templates were pre-processed, as a milliseconds timestamp.
+     */
+    private long lastPreprocessingRun = 0;
 
     public TemplatingEngine ()
     {
@@ -43,6 +73,73 @@ public class TemplatingEngine
 
         this.rootElementsRegistry = new HashMap<>();
         this.rootElementsMetaData = new HashMap<>();
+        this.registryTimestamps = new HashMap<>();
+    }
+
+    /**
+     * Pre-processes the templates that changed since the last pre-processing run.
+     *
+     * You don't need to call this method, it will be automatically invoked the first time you
+     * attempt to get a template from the engine. After that, it will be called everytime you
+     * register a template, either replacing or creating.
+     *
+     * You can however use this method if you want to control when the pre-processing occurs.
+     * If you call it just after registering your initial templates, then it wont be lazily invoked
+     * on the first getTemplate() call.
+     *
+     * When called, this method filters out templates that haven't changed since the last pre-processing
+     * run, so you don't have to worry about unnecessary processing occurring here.
+     */
+    public void preprocessChanges ()
+    {
+        final long previousRun = lastPreprocessingRun;
+        lastPreprocessingRun = System.currentTimeMillis();
+
+        registryTimestamps.entrySet().stream()
+            .filter(e -> e.getValue() > previousRun)
+            .map(e -> rootElementsRegistry.get(e.getKey()))
+            .filter(e -> e != null)
+            .forEach(e -> e.prepare());
+    }
+
+    /**
+     * Dumps the instruction set for the given template to System.out
+     *
+     * This method is mostly intended for debugging and inspection, there are no
+     * uses for it in a production system.
+     *
+     * @param qualifiedName
+     */
+    public void dumpTemplateInstructionTree (String qualifiedName)
+    {
+        dumpTemplateInstructionTree(qualifiedName, System.out);
+    }
+
+    /**
+     * Dumps the instruction set for the given template to the specified output.
+     *
+     * This method is mostly intended for debugging and inspection, there are no
+     * uses for it in a production system.
+     *
+     * @param qualifiedName
+     * @param out
+     */
+    public void dumpTemplateInstructionTree (String qualifiedName, PrintStream out)
+    {
+        TemplateRootElement el = (TemplateRootElement) getTemplate(qualifiedName);
+
+        out.println("- " + qualifiedName + " --------------------");
+
+        if(el == null)
+        {
+            out.println("No template found named '" + qualifiedName + "'");
+            out.println("-----------------------");
+            return;
+        }
+
+        el.getInstructionSet().dump(out);
+
+        out.println("-----------------------");
     }
 
     /**
@@ -63,8 +160,21 @@ public class TemplatingEngine
 
         if(rootElement != null)
         {
-            rootElementsRegistry.put(rootElement.getTemplateName(), rootElement);
-            rootElementsMetaData.put(rootElement.getTemplateName(), rootElement.getMetaData());
+            rootElementsRegistry.compute(rootElement.getTemplateName(), (k, v) -> rootElement);
+            rootElementsMetaData.compute(rootElement.getTemplateName(), (k, v) -> rootElement.getMetaData());
+
+            registryTimestamps.compute(rootElement.getTemplateName(), (k, v) -> System.currentTimeMillis());
+
+            // We don't pre-process initially because templates may depend on each other, so we'll load everything and
+            // once the user calls getTemplate for the first time, the initial pre-processing run will be executed.
+            // After that, we always pre-process on new changes.
+            //
+            // Alternative to this would be to make the user responsible for registering templates in the correct order
+            // regarding dependencies, but we don't want to create that extra hassle.
+            if(lastPreprocessingRun > 0)
+            {
+                preprocessChanges();
+            }
 
             return rootElement.getTemplateName();
         }
@@ -107,6 +217,11 @@ public class TemplatingEngine
      */
     public ReadableElement getTemplate (String qualifiedName)
     {
+        if(lastPreprocessingRun == 0)
+        {
+            preprocessChanges();
+        }
+
         return rootElementsRegistry.get(qualifiedName);
     }
 
@@ -128,7 +243,7 @@ public class TemplatingEngine
      */
     public Optional<ReadableElement> template (String qualifiedName)
     {
-        return Optional.ofNullable(rootElementsRegistry.get(qualifiedName));
+        return Optional.ofNullable(getTemplate(qualifiedName));
     }
 
     /**
@@ -142,7 +257,7 @@ public class TemplatingEngine
      */
     public void render (ReadableElement root, Scope scope, OutputStream os) throws IOException
     {
-        new Renderer(this, root, scope, os);
+        new PreprocessedRenderer(this, ((TemplateRootElement) root).getInstructionSet(), scope, os, Collections.emptyMap());
     }
 
     /**
@@ -176,11 +291,20 @@ public class TemplatingEngine
      */
     public static class Initializer
     {
-        private List<Path> searchDirectories;
+        private final Map<Path, Boolean> searchDirectories;
+        private final Map<FileSystem, WatchService> watchServices;
+        private final Map<WatchKey, Path> watchKeyPaths;
 
         Initializer ()
         {
-            this.searchDirectories = new ArrayList<>();
+            searchDirectories = new HashMap<>();
+            watchServices = new HashMap<>();
+            watchKeyPaths = new HashMap<>();
+        }
+
+        private WatchService getWatchService (FileSystem fs) throws IOException
+        {
+            return watchServices.computeIfAbsent(fs, CheckedFunction.rethrow((_fs) -> _fs.newWatchService()));
         }
 
         /**
@@ -190,11 +314,51 @@ public class TemplatingEngine
          * extension .html
          *
          * @param path
+         *
+         * @param watchDirectory If true, a filesystem watcher will be created and
+         * for any changes detected, the files will be reloaded.
+         *
          * @return
          */
-        public Initializer withSearchDirectory(Path path)
+        public Initializer withSearchDirectory(Path path, boolean watchDirectory)
         {
-            searchDirectories.add(path);
+            searchDirectories.put(path, watchDirectory);
+            return this;
+        }
+
+        /**
+         * Adds a new search directory for template discovery.
+         *
+         * Each directory will be searched recursively for any files with the
+         * extension .html
+         *
+         * The templates will be loaded once. There will be no change-watchers
+         * created from this method.
+         *
+         * @param path
+         * @return
+         */
+        public Initializer withSearchDirectory (Path path)
+        {
+            return withSearchDirectory(path, false);
+        }
+
+        /**
+         * Adds multiple search directories for template discovery.
+         *
+         * Each directory will be searched recursively for any files with the
+         * extension .html
+         *
+         * @param watchDirectory If true, a filesystem watcher will be created and
+         * for any changes detected, the files will be reloaded.
+         *
+         * @param paths
+         *
+         * @return
+         */
+        public Initializer withSearchDirectories(boolean watchDirectory, Path... paths)
+        {
+            for(Path path : paths) withSearchDirectory(path, watchDirectory);
             return this;
         }
 
@@ -204,13 +368,15 @@ public class TemplatingEngine
          * Each directory will be searched recursively for any files with the
          * extension .html
          *
+         * The templates will be loaded once. There will be no change-watchers
+         * created from this method.
+         *
          * @param paths
          * @return
          */
-        public Initializer withSearchDirectories(Path... paths)
+        public Initializer withSearchDirectories (Path... paths)
         {
-            for(Path path : paths) withSearchDirectory(path);
-            return this;
+            return withSearchDirectories(false, paths);
         }
 
         /**
@@ -226,15 +392,24 @@ public class TemplatingEngine
         {
             TemplatingEngine engine = new TemplatingEngine();
 
-            for(Path path : searchDirectories)
+            for(Map.Entry<Path, Boolean> entry : searchDirectories.entrySet())
             {
-                handleFileObject(path, engine);
+                handleFileObject(entry.getKey(), engine, entry.getValue());
             }
+
+            engine.preprocessChanges();
+
+            ExecutorService executor = Executors.newCachedThreadPool();
+            for(WatchService s : watchServices.values())
+            {
+                executor.submit(() -> handleWatchService(s, engine));
+            }
+            executor.shutdown();
 
             return engine;
         }
 
-        private void handleFileObject (Path file, TemplatingEngine engine) throws IOException, ParserConfigurationException, SAXException
+        private void handleFileObject (Path file, TemplatingEngine engine, boolean watch) throws IOException, ParserConfigurationException, SAXException
         {
             if(!Files.exists(file))
             {
@@ -243,20 +418,69 @@ public class TemplatingEngine
 
             if(Files.isDirectory(file))
             {
+                if(watch)
+                {
+                    WatchKey wk = file.register(getWatchService(file.getFileSystem()),
+                        StandardWatchEventKinds.ENTRY_CREATE,
+                        StandardWatchEventKinds.ENTRY_DELETE,
+                        StandardWatchEventKinds.ENTRY_MODIFY);
+
+                    watchKeyPaths.put(wk, file);
+                }
+
                 for(Path subdir : Files.newDirectoryStream(file, (f) -> Files.isDirectory(f)))
                 {
-                    handleFileObject(subdir, engine);
+                    handleFileObject(subdir, engine, watch);
                 }
 
                 for(Path tplFile : Files.newDirectoryStream(file, "*.html"))
                 {
-                    handleFileObject(tplFile, engine);
+                    handleFileObject(tplFile, engine, false);
                 }
 
                 return;
             }
 
             engine.registerTemplate(Files.newInputStream(file));
+        }
+
+        private void handleWatchService (WatchService service, TemplatingEngine engine)
+        {
+            for(;;)
+            {
+                WatchKey key;
+
+                try
+                {
+                    key = service.take();
+                } catch (InterruptedException e)
+                {
+                    return;
+                }
+
+                Path base = watchKeyPaths.get(key);
+
+                if(base != null)
+                {
+                    for(WatchEvent<?> ev : key.pollEvents())
+                    {
+                        if(ev.context() instanceof Path &&
+                            ev.kind() == StandardWatchEventKinds.ENTRY_MODIFY &&
+                            !Files.isDirectory((Path) ev.context()))
+                        {
+                            try
+                            {
+                                handleFileObject(base.resolve(((Path) ev.context())), engine, false);
+                            } catch(IOException | ParserConfigurationException | SAXException e)
+                            {
+                                // TODO: engine.removeTemplate(...)
+                                // Or other way to inform the template wasn't parsed.
+                            }
+                        }
+                    }
+                }
+                key.reset();
+            }
         }
     }
 }

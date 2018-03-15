@@ -55,6 +55,11 @@ public class TemplateExpressionText extends TemplateText
         segments.add(segment);
     }
 
+    public List<Segment> getSegments ()
+    {
+        return segments;
+    }
+
     public Expression getExpressionIfOnlySegment ()
     {
         return segments.size() == 1 && segments.get(0).type == Segment.Type.EXPRESSION ?
@@ -91,7 +96,7 @@ public class TemplateExpressionText extends TemplateText
         return refCheck.matcher(str).find();
     }
 
-    private static class Segment
+    public static class Segment
     {
         public enum Type
         {
@@ -99,13 +104,23 @@ public class TemplateExpressionText extends TemplateText
             EXPRESSION
         }
 
-        public final Type type;
-        public final Object object;
+        private final Type type;
+        private final Object object;
 
         public Segment (Type type, Object object)
         {
             this.type = type;
             this.object = object;
+        }
+
+        public Type getType ()
+        {
+            return type;
+        }
+
+        public Object getObject ()
+        {
+            return object;
         }
     }
 }

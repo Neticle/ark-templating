@@ -3,7 +3,10 @@ package pt.neticle.ark.templating.renderer;
 import pt.neticle.ark.templating.structure.Node;
 import pt.neticle.ark.templating.structure.ReadableElement;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class InternalScope implements Scope
 {
@@ -35,38 +38,6 @@ public class InternalScope implements Scope
         this.data.putAll(data);
     }
 
-    public void addSlottedElement (String slot, ReadableElement element)
-    {
-        if(element == null)
-        {
-            return;
-        }
-
-        slotElements.computeIfAbsent(slot, (k) -> new ArrayList<>())
-            .add(element);
-    }
-
-    public void addSlottedElements (String slot, List<ReadableElement> elements)
-    {
-        slotElements.computeIfAbsent(slot, (k) -> new ArrayList<>())
-            .addAll(elements);
-    }
-
-    public void addSlottedNode (Node node)
-    {
-        if(node == null)
-        {
-            return;
-        }
-
-        unassignedSlotElements.add(node);
-    }
-
-    public void addSlottedNodes (List<Node> nodes)
-    {
-        unassignedSlotElements.addAll(nodes);
-    }
-
     @Override
     public Scope getParent ()
     {
@@ -83,17 +54,5 @@ public class InternalScope implements Scope
     public Object get (String key)
     {
         return data.getOrDefault(key, parent != null ? parent.get(key) : null);
-    }
-
-    @Override
-    public List<ReadableElement> getElementsForSlot (String slot)
-    {
-        return slotElements.getOrDefault(slot, new ArrayList<>(0));
-    }
-
-    @Override
-    public List<Node> getUnassignedSlotNodes ()
-    {
-        return unassignedSlotElements;
     }
 }
