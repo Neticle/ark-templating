@@ -1,0 +1,21 @@
+## SCOPE
+{
+    "falseCondition": false,
+    "trueCondition": true
+}
+## TEMPLATE
+<template name="test">
+    <div>
+        <template if="{{ falseCondition }}">
+            <p>This shouldn't show up</p>
+        </template>
+
+        <template if="{{ trueCondition }}">
+            <p>This should show up</p>
+        </template>
+    </div>
+</template>
+## EXPECTED-RESULT
+<div>
+    <p>This should show up</p>
+</div>

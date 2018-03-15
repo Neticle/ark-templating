@@ -1,0 +1,68 @@
+## SCOPE
+{
+    "data": [ "alpha", "beta", "charlie", "delta", "foxtrot" ],
+    "emptyData": [],
+    "objectList": [
+        {
+            "key": "1",
+            "value": "One"
+        },
+        {
+            "key": "2",
+            "value": "Two"
+        },
+        {
+            "key": "3",
+            "value": "Three"
+        }
+    ],
+    "falseCondition": false
+}
+## TEMPLATE
+<template name="test">
+    <div>
+        <template is="foreach" data="{{ data }}">
+            <p>{{ = item }}</p>
+        </template>
+
+        <template is="foreach" data="{{ emptyData }}">
+            <p>This shouldn't show up</p>
+        </template>
+
+        <template is="foreach" data="{{ emptyData }}">
+            <p slot="empty">Dataset was empty</p>
+        </template>
+
+        <template if="{{ falseCondition }}" is="foreach" data="{{ data }}">
+            <p>This shouldn't show up - {{ = item }}</p>
+        </template>
+
+        <template is="foreach" data="{{ objectList }}">
+            <p>{{ = item.key }} => {{ = item.value }}</p>
+        </template>
+
+        <template is="foreach" data="{{ data }}" as="entry" loop="meta">
+            <p>{{ = meta.index }}: {{ = entry }}{{ = If(meta.isLast, ' (last one)', '') }}</p>
+        </template>
+    </div>
+</template>
+## EXPECTED-RESULT
+<div>
+    <p>alpha</p>
+    <p>beta</p>
+    <p>charlie</p>
+    <p>delta</p>
+    <p>foxtrot</p>
+
+    <p>Dataset was empty</p>
+
+    <p>1 => One</p>
+    <p>2 => Two</p>
+    <p>3 => Three</p>
+
+    <p>1: alpha</p>
+    <p>2: beta</p>
+    <p>3: charlie</p>
+    <p>4: delta</p>
+    <p>5: foxtrot (last one)</p>
+</div>

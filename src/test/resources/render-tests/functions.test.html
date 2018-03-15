@@ -1,0 +1,36 @@
+## SCOPE
+{
+    "data": [ "alpha", "beta", "charlie", "delta", "foxtrot" ],
+    "dataStr": "one,two,three,four"
+}
+## TEMPLATE
+<template name="test">
+    <div>
+        <p>{{ = Implode('; ', data) }}</p>
+        <p>{{ Implode('; ', data) }}</p>
+
+        <p>Nested calls: {{ = Implode('; ', Explode(',', dataStr)) }}</p>
+
+        <template is="foreach" data="{{ Explode(',', dataStr) }}">
+            <p>{{ = item }}</p>
+        </template>
+
+        <template if="{{ NotEmpty(data) }}">
+            <p>data is not empty</p>
+        </template>
+    </div>
+</template>
+## EXPECTED-RESULT
+<div>
+    <p>alpha; beta; charlie; delta; foxtrot</p>
+    <p></p>
+
+    <p>Nested calls: one; two; three; four</p>
+
+    <p>one</p>
+    <p>two</p>
+    <p>three</p>
+    <p>four</p>
+
+    <p>data is not empty</p>
+</div>

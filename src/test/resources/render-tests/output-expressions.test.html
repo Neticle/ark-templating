@@ -1,0 +1,33 @@
+## SCOPE
+{
+    "var1": "test",
+    "var2": null,
+    "var3": {
+        "foo": "bar"
+    }
+}
+## TEMPLATE
+<template name="test">
+    <div>
+        <div>{{ = var1 }}</div>
+        <div>{{ = var2 }}</div>
+        <div>{{ = var2 || 'default' }}</div>
+        <div>{{ = unknownVar }}</div>
+        <div>{{ = unknownVar || 'default' }}</div>
+        <div>{{ var1 }}</div>
+
+        <div>{{ = var3.foo }}</div>
+        <div>{{ = var3.unknown }}</div>
+    </div>
+</template>
+## EXPECTED-RESULT
+<div>
+    <div>test</div>
+    <div></div>
+    <div>default</div>
+    <div></div>
+    <div>default</div>
+    <div></div>
+    <div>bar</div>
+    <div></div>
+</div>

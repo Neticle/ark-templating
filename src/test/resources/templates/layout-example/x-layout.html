@@ -1,0 +1,27 @@
+<template name="x:layout">
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+
+        <slot name="styles-head"></slot>
+        <slot name="scripts-head"></slot>
+
+        <title>{{ = title || 'Untitled' }} - My Website</title>
+    </head>
+    <body>
+        <div class="container">
+            <h1>{{ = title }}</h1>
+        </div>
+
+        <slot></slot>
+
+        <footer>
+            <div class="container">
+                <p>Copyright (c) 2018 - Myself</p>
+            </div>
+        </footer>
+
+        <slot name="scripts-body"></slot>
+    </body>
+    </html>
+</template>

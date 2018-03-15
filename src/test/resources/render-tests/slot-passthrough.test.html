@@ -1,0 +1,46 @@
+## SCOPE
+{}
+## TEMPLATE
+<template name="x:root">
+    <div class="root">
+        <div class="foos">
+            <slot name="foo"></slot>
+        </div>
+        <div class="bars">
+            <slot name="bar"></slot>
+        </div>
+        <div class="everything-else">
+            <slot></slot>
+        </div>
+    </div>
+</template>
+## TEMPLATE
+<template name="x:custom">
+    <x:root>
+        <div class="custom">
+            <slot></slot>
+        </div>
+
+        <slot name="bar" slot="bar"></slot>
+    </x:root>
+</template>
+## TEMPLATE
+<template name="test">
+    <x:custom>
+        <p slot="foo">doesn't propagate</p>
+        <p slot="bar">should show up</p>
+        <p>unassigned</p>
+    </x:custom>
+</template>
+## EXPECTED-RESULT
+<div class="root">
+    <div class="foos"></div>
+    <div class="bars">
+        <p>should show up</p>
+    </div>
+    <div class="everything-else">
+        <div class="custom">
+            <p>unassigned</p>
+        </div>
+    </div>
+</div>

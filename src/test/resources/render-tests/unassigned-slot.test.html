@@ -1,0 +1,31 @@
+## SCOPE
+{}
+## TEMPLATE
+<template name="x:custom">
+    <div class="custom">
+        <slot></slot>
+    </div>
+</template>
+## TEMPLATE
+<template name="test">
+    <div>
+        <x:custom>
+            <p>unassigned</p>
+            <p slot="foo">in foo slot</p>
+        </x:custom>
+        <x:custom>
+            <p>a</p>
+            <p>b</p>
+        </x:custom>
+    </div>
+</template>
+## EXPECTED-RESULT
+<div>
+    <div class="custom">
+        <p>unassigned</p>
+    </div>
+    <div class="custom">
+        <p>a</p>
+        <p>b</p>
+    </div>
+</div>

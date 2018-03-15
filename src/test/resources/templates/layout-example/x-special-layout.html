@@ -1,0 +1,9 @@
+<template name="x:special-layout">
+    <x:layout title="{{ title }}">
+        <div class="container special-container">
+            <slot></slot>
+        </div>
+
+        <slot name="scripts-body" slot="scripts-body"></slot>
+    </x:layout>
+</template>
