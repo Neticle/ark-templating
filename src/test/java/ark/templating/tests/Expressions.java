@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import pt.neticle.ark.templating.renderer.MainScope;
 import pt.neticle.ark.templating.structure.expressions.*;
+import pt.neticle.ark.templating.structure.functions.FunctionCatalog;
+
 import java.text.ParseException;
 
 public class Expressions
@@ -12,7 +14,7 @@ public class Expressions
 
     public Expressions ()
     {
-        matcher = new ExpressionMatcher(null);
+        matcher = new ExpressionMatcher(new FunctionCatalog());
     }
 
     @Test

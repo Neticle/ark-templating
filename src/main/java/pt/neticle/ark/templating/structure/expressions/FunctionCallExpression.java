@@ -20,6 +20,7 @@ public class FunctionCallExpression implements Expression
     private final String functionName;
     private final Expression[] argumentExpressions;
     private final ExpressionMatcher origin;
+    private final FunctionHandler handler;
 
     FunctionCallExpression (ExpressionMatcher matcher, String text) throws ParseException
     {
@@ -77,12 +78,12 @@ public class FunctionCallExpression implements Expression
         }
 
         argumentExpressions = argList.stream().toArray(Expression[]::new);
+        handler = origin.getFunctionCatalog().getHandler(functionName);
     }
 
     @Override
     public Object resolve (Scope scope)
     {
-        FunctionHandler handler = origin.getFunctionCatalog().getHandler(functionName);
         Object result;
 
         if(handler != null)
