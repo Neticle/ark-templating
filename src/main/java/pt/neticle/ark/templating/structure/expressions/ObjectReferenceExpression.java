@@ -5,7 +5,9 @@ import pt.neticle.ark.templating.renderer.Scope;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -24,6 +26,8 @@ public class ObjectReferenceExpression implements Expression
     private static final Pattern matcherPt = Pattern.compile("(^\\w([\\w.]*)?\\w$)|(^(\\w+)$)");
     private final String[] segments;
 
+    private static Map<String, Method> mappedMethods = new ConcurrentHashMap<>();
+
     ObjectReferenceExpression (ExpressionMatcher matcher, String text)
     {
         segments = Arrays.stream(text.split("\\."))
@@ -40,6 +44,7 @@ public class ObjectReferenceExpression implements Expression
         }
 
         Object current = scope.get(segments[0]);
+
         for(int i = 1; i < segments.length && current != null; i++)
         {
             if(current instanceof Map)
@@ -65,16 +70,18 @@ public class ObjectReferenceExpression implements Expression
             }
             else
             {
-                Method getter;
-
-                try
+                final Object finalCurrent = current;
+                final int finalI = i;
+                Method getter = mappedMethods.computeIfAbsent(current.getClass().getName()+segments[i], (k) ->
                 {
-                    getter = current.getClass().getMethod("get" + segments[i].substring(0,1).toUpperCase() + segments[i].substring(1));
-                } catch(NoSuchMethodException e)
-                {
-                    current = null;
-                    getter = null;
-                }
+                    try
+                    {
+                        return finalCurrent.getClass().getMethod("get" + segments[finalI].substring(0, 1).toUpperCase() + segments[finalI].substring(1));
+                    } catch(NoSuchMethodException e)
+                    {
+                        return null;
+                    }
+                });
 
                 if(getter != null)
                 {
@@ -88,6 +95,10 @@ public class ObjectReferenceExpression implements Expression
                     {
                         throw new RuntimeException(e);
                     }
+                }
+                else
+                {
+                    current = null;
                 }
             }
         }
