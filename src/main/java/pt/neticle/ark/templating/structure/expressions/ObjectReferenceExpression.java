@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -25,6 +26,7 @@ public class ObjectReferenceExpression implements Expression
 {
     private static final Pattern matcherPt = Pattern.compile("(^\\w([\\w.]*)?\\w$)|(^(\\w+)$)");
     private final String[] segments;
+    private final int hashCode;
 
     private static Map<String, Method> mappedMethods = new ConcurrentHashMap<>();
 
@@ -33,9 +35,10 @@ public class ObjectReferenceExpression implements Expression
         segments = Arrays.stream(text.split("\\."))
             .filter((s) -> s.length() > 0)
             .toArray(String[]::new);
+
+        hashCode = Arrays.hashCode(segments);
     }
 
-    @Override
     public Object resolve (Scope scope)
     {
         if(segments.length == 0)
@@ -106,6 +109,12 @@ public class ObjectReferenceExpression implements Expression
         return current;
     }
 
+    @Override
+    public Function<Scope, Object> getResolver ()
+    {
+        return this::resolve;
+    }
+
     public String[] getSegments ()
     {
         return segments;
@@ -114,5 +123,22 @@ public class ObjectReferenceExpression implements Expression
     static boolean matches (String text)
     {
         return matcherPt.matcher(text).find();
+    }
+
+    @Override
+    public boolean equals (Object o)
+    {
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
+
+        ObjectReferenceExpression that = (ObjectReferenceExpression) o;
+
+        return that.hashCode == hashCode && Arrays.equals(segments, that.segments);
+    }
+
+    @Override
+    public int hashCode ()
+    {
+        return hashCode;
     }
 }

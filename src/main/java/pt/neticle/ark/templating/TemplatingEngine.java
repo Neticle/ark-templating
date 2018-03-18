@@ -3,6 +3,7 @@ package pt.neticle.ark.templating;
 import org.xml.sax.SAXException;
 import pt.neticle.ark.templating.functional.CheckedFunction;
 import pt.neticle.ark.templating.parsing.TemplateParser;
+import pt.neticle.ark.templating.renderer.InternalScope;
 import pt.neticle.ark.templating.renderer.PreprocessedRenderer;
 import pt.neticle.ark.templating.renderer.Scope;
 import pt.neticle.ark.templating.structure.ReadableElement;
@@ -257,7 +258,7 @@ public class TemplatingEngine
      */
     public void render (ReadableElement root, Scope scope, OutputStream os) throws IOException
     {
-        new PreprocessedRenderer(this, ((TemplateRootElement) root).getInstructionSet(), scope, os, Collections.emptyMap());
+        new PreprocessedRenderer(this, ((TemplateRootElement) root).getInstructionSet(), new InternalScope(scope), os, Collections.emptyMap());
     }
 
     /**

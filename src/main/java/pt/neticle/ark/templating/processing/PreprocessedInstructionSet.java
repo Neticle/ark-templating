@@ -108,7 +108,7 @@ public class PreprocessedInstructionSet
             if(templateElement == null || templateElement.hasUnassignedSlot())
             {
                 List<Instruction> pl = element.childs()
-                    .filter((n) -> !(n instanceof ReadableElement) ||
+                    .filter((n) -> (n instanceof ReadableElement) &&
                             (!((ReadableElement)n).hasAttribute("slot")))
                     .map(n -> new PreprocessedInstructionSet(engine, n).getRoot())
                     .collect(Collectors.toList());

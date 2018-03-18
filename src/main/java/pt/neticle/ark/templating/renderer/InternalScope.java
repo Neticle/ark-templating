@@ -1,19 +1,15 @@
 package pt.neticle.ark.templating.renderer;
 
-import pt.neticle.ark.templating.structure.Node;
-import pt.neticle.ark.templating.structure.ReadableElement;
+import pt.neticle.ark.templating.structure.expressions.Expression;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class InternalScope implements Scope
 {
     private final Scope parent;
     private final Map<String, Object> data;
-    private final Map<String, List<ReadableElement>> slotElements;
-    private final List<Node> unassignedSlotElements;
+    private final Map<Expression, Object> evaluatedExpressions;
 
     public InternalScope (Scope parent)
     {
@@ -24,8 +20,7 @@ public class InternalScope implements Scope
     {
         this.parent = parent;
         this.data = data;
-        this.slotElements = new HashMap<>();
-        this.unassignedSlotElements = new ArrayList<>();
+        this.evaluatedExpressions = new HashMap<>();
     }
 
     public void put (String key, Object value)
@@ -54,5 +49,26 @@ public class InternalScope implements Scope
     public Object get (String key)
     {
         return data.getOrDefault(key, parent != null ? parent.get(key) : null);
+    }
+
+    @Override
+    public Object evaluate (Expression expr)
+    {
+        if(evaluatedExpressions.containsKey(expr))
+        {
+            return evaluatedExpressions.get(expr);
+        }
+
+        final Object r = expr.getResolver().apply(this);
+        evaluatedExpressions.put(expr, r);
+
+        return r;
+    }
+
+    @Override
+    public void reset ()
+    {
+        data.clear();
+        evaluatedExpressions.clear();
     }
 }

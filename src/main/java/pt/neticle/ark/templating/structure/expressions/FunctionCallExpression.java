@@ -7,6 +7,7 @@ import pt.neticle.ark.templating.structure.functions.FunctionHandler;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +22,7 @@ public class FunctionCallExpression implements Expression
     private final Expression[] argumentExpressions;
     private final ExpressionMatcher origin;
     private final FunctionHandler handler;
+    private final int hashCode;
 
     FunctionCallExpression (ExpressionMatcher matcher, String text) throws ParseException
     {
@@ -48,9 +50,11 @@ public class FunctionCallExpression implements Expression
                 {
                     Expression expression;
 
-                    try {
+                    try
+                    {
                         expression = matcher.match(args.substring(offset, i).trim());
-                    } catch(RenderingException e)
+                    }
+                    catch(RenderingException e)
                     {
                         throw new ParseException("Could not parse expression of argument " + argList.size(), 0);
                     }
@@ -79,19 +83,30 @@ public class FunctionCallExpression implements Expression
 
         argumentExpressions = argList.stream().toArray(Expression[]::new);
         handler = origin.getFunctionCatalog().getHandler(functionName);
+
+        {
+            int result = functionName.hashCode();
+            result = 31 * result + Arrays.hashCode(argumentExpressions);
+            result = 31 * result + origin.hashCode();
+            result = 31 * result + (handler != null ? handler.hashCode() : 0);
+
+            hashCode = result;
+        }
     }
 
-    @Override
     public Object resolve (Scope scope)
     {
-        Object result;
+        final FunctionHandler _handler = handler != null ?
+            handler : origin.getFunctionCatalog().getHandler(functionName);
 
-        if(handler != null)
+        final Object result;
+
+        if(_handler != null)
         {
-            result = handler.apply
+            result = _handler.apply
             (
                 Arrays.stream(argumentExpressions)
-                    .map((x) -> x.resolve(scope))
+                    .map((x) -> scope.evaluate(x))
                     .toArray(Object[]::new)
             );
         }
@@ -101,6 +116,12 @@ public class FunctionCallExpression implements Expression
         }
 
         return result;
+    }
+
+    @Override
+    public Function<Scope, Object> getResolver ()
+    {
+        return this::resolve;
     }
 
     public String getFunctionName ()
@@ -116,5 +137,26 @@ public class FunctionCallExpression implements Expression
     static boolean matches (String text)
     {
         return signaturePt.matcher(text).find();
+    }
+
+    @Override
+    public boolean equals (Object o)
+    {
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
+
+        FunctionCallExpression that = (FunctionCallExpression) o;
+
+        if(hashCode != that.hashCode) return false;
+        if(!functionName.equals(that.functionName)) return false;
+        if(!Arrays.equals(argumentExpressions, that.argumentExpressions)) return false;
+        if(!origin.equals(that.origin)) return false;
+        return handler != null ? handler.equals(that.handler) : that.handler == null;
+    }
+
+    @Override
+    public int hashCode ()
+    {
+        return hashCode;
     }
 }

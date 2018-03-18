@@ -101,7 +101,7 @@ public class PreprocessedRenderer
 
     private void visitExpressionResultOutputInst (ExpressionResultOutputInstruction inst)
     {
-        Object result = inst.getExpression().resolve(scope);
+        Object result = scope.evaluate(inst.getExpression());
 
         if(result != null)
         {
@@ -162,7 +162,7 @@ public class PreprocessedRenderer
 
             if(e.getValue().size() == 1 && e.getValue().get(0).getObject() instanceof Expression)
             {
-                newScope.put(e.getKey(), ((Expression) e.getValue().get(0).getObject()).resolve(scope));
+                newScope.put(e.getKey(), scope.evaluate((Expression)e.getValue().get(0).getObject()));
             }
             else
             {
@@ -176,7 +176,7 @@ public class PreprocessedRenderer
                     }
                     else if(segment.getType() == TemplateExpressionText.Segment.Type.EXPRESSION)
                     {
-                        Object result = ((Expression) segment.getObject()).resolve(scope);
+                        Object result = scope.evaluate((Expression) segment.getObject());
 
                         if(result != null)
                             s += result.toString();
@@ -207,7 +207,7 @@ public class PreprocessedRenderer
         if(inst.getAttributes().containsKey("if") &&
             (ifExpr = getExpressionIfSingleSegment(inst.getAttributes().get("if"))) != null)
         {
-            if(!Boolean.valueOf(ifExpr.resolve(scope).toString()))
+            if(!Boolean.valueOf(scope.evaluate(ifExpr).toString()))
             {
                 // If the expression evaluated to false, we'll display the content of the "else" slot,
                 // if available, and stop execution here.
@@ -253,9 +253,13 @@ public class PreprocessedRenderer
         final String loop = flattenedSegments(inst.getAttributes().get("loop"))
             .orElse(null);
 
-        final Object result = dataExpr.resolve(scope);
+        final Object result = scope.evaluate(dataExpr);
 
-        if(result == null)
+        final Instruction repeatable = inst.getPreprocessedSlotMembers().get("@unassigned").stream()
+            .findFirst()
+            .orElse(null);
+
+        if(result == null || repeatable == null)
         {
             // When empty, we display slotted content from the "empty" slot, if any.
             inst.getPreprocessedSlotMembers().get("empty").stream()
@@ -288,6 +292,7 @@ public class PreprocessedRenderer
         // we're making the inner scope a child of the current scope, so we can access variables defined outside
         // the for-each block
         final InternalScope newScope = new InternalScope(scope);
+        scope = newScope;
 
         if(loop == null)
         {
@@ -298,12 +303,11 @@ public class PreprocessedRenderer
                 // current item is supplied in the inner scope with the specified "as" name
                 newScope.put(as, o);
 
-                scope = newScope;
-
-                inst.getPreprocessedSlotMembers().get("@unassigned").stream()
-                    .forEach(this::accept);
+                accept(repeatable);
 
                 totalIterated[0]++;
+
+                newScope.reset();
             });
         }
         else
@@ -320,12 +324,11 @@ public class PreprocessedRenderer
                 newScope.put(as, o);
                 newScope.put(loop, new ForeachIterationInfo(totalIterated[0], totalIterated[0] == 0, !it.hasNext()));
 
-                scope = newScope;
-
-                inst.getPreprocessedSlotMembers().get("@unassigned").stream()
-                    .forEach(this::accept);
+                accept(repeatable);
 
                 totalIterated[0]++;
+
+                newScope.reset();
             }
         }
 
@@ -403,7 +406,7 @@ public class PreprocessedRenderer
         {
             if(s.getType() == TemplateExpressionText.Segment.Type.EXPRESSION)
             {
-                return ((Expression) s.getObject()).resolve(scope).toString();
+                return scope.evaluate((Expression) s.getObject()).toString();
             }
             else if(s.getType() == TemplateExpressionText.Segment.Type.TEXT)
             {

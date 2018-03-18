@@ -81,7 +81,7 @@ public class TemplateExpressionText extends TemplateText
 
                 else if(segment.type == Segment.Type.EXPRESSION)
                 {
-                    Object r = ((Expression)segment.object).resolve(scope);
+                    Object r = ((Expression)segment.object).getResolver().apply(scope);
 
                     return r != null ? r.toString() : null;
                 }

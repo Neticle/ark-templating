@@ -2,6 +2,7 @@ package pt.neticle.ark.templating.structure.expressions;
 
 import pt.neticle.ark.templating.renderer.Scope;
 
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,9 +34,9 @@ public class StringLiteralExpression implements Expression
     }
 
     @Override
-    public Object resolve (Scope scope)
+    public Function<Scope, Object> getResolver ()
     {
-        return content;
+        return (s) -> content;
     }
 
     static boolean matches (String text)
@@ -46,5 +47,22 @@ public class StringLiteralExpression implements Expression
     public String getContent ()
     {
         return content;
+    }
+
+    @Override
+    public boolean equals (Object o)
+    {
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
+
+        StringLiteralExpression that = (StringLiteralExpression) o;
+
+        return content != null ? content.equals(that.content) : that.content == null;
+    }
+
+    @Override
+    public int hashCode ()
+    {
+        return content != null ? content.hashCode() : 0;
     }
 }

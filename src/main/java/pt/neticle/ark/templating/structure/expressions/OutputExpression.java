@@ -3,6 +3,7 @@ package pt.neticle.ark.templating.structure.expressions;
 import pt.neticle.ark.templating.renderer.Scope;
 
 import java.text.ParseException;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +29,7 @@ public class OutputExpression implements Expression
     private final Operator operator;
     private final Expression getterExpression;
     private final Expression defaultExpression;
+    private final int hashCode;
 
     OutputExpression (ExpressionMatcher matcher, String text) throws ParseException
     {
@@ -59,27 +61,61 @@ public class OutputExpression implements Expression
         getterExpression = matcher.match(subExpressions[0].trim());
         defaultExpression = subExpressions.length > 1 ?
             matcher.match(subExpressions[1].trim()) : null;
+
+        {
+            int result = operator.hashCode();
+            result = 31 * result + (getterExpression != null ? getterExpression.hashCode() : 0);
+            result = 31 * result + (defaultExpression != null ? defaultExpression.hashCode() : 0);
+
+            hashCode = result;
+        }
     }
 
-    @Override
     public Object resolve (Scope scope)
     {
         Object result = null;
         if(getterExpression != null)
         {
-            result = getterExpression.resolve(scope);
+            result = scope.evaluate(getterExpression);
         }
 
         if(result == null && defaultExpression != null)
         {
-            result = defaultExpression.resolve(scope);
+            result = scope.evaluate(defaultExpression);
         }
 
         return result;
     }
 
+    @Override
+    public Function<Scope, Object> getResolver ()
+    {
+        return this::resolve;
+    }
+
     static boolean matches (String str)
     {
         return operatorPt.matcher(str).find();
+    }
+
+    @Override
+    public boolean equals (Object o)
+    {
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
+
+        OutputExpression that = (OutputExpression) o;
+
+        if(hashCode != that.hashCode) return false;
+        if(operator != that.operator) return false;
+        if(getterExpression != null ? !getterExpression.equals(that.getterExpression) : that.getterExpression != null)
+            return false;
+        return defaultExpression != null ? defaultExpression.equals(that.defaultExpression) : that.defaultExpression == null;
+    }
+
+    @Override
+    public int hashCode ()
+    {
+        return hashCode;
     }
 }
