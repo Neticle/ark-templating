@@ -6,7 +6,7 @@
 
     <groupId>pt.neticle.ark</groupId>
     <artifactId>ark-templating</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0-SNAPSHOT</version>
 
     <name>Ark Templating Engine</name>
     <description>A HTML rendering Java library inspired by the WebComponents/HTML Templates spec</description>

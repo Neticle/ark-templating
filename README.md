@@ -96,7 +96,7 @@ assigned to a specific slot will be rendered in place of `<slot></slot>`.
 In addition to the basic usage demonstrated, slots can also be propagated through multiple levels of nested templates.
 
 For instance, following our example, if we wanted to add a new type of layout - `x:special-layout` - that was based 
-of the existing `x:layout` element, behaved the same but add a few extra elements in it's body and allowed assigning 
+of the existing `x:layout` element, behaved the same but added a few extra elements in it's body, and allowed assigning 
 elements to `body-scripts` but not to any other slot, we could do it like this:
 
 ```xml
@@ -206,7 +206,7 @@ Ark Templating is available in the maven central repository. Add the following d
 <dependency>
     <groupId>pt.neticle.ark</groupId>
     <artifactId>ark-templating</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ``` 
 
