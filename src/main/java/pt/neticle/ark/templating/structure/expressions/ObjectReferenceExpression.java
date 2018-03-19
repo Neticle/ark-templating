@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -71,6 +72,12 @@ public class ObjectReferenceExpression implements Expression
                     current = null;
                 }
             }
+
+            else if(current instanceof Supplier)
+            {
+                current = ((Supplier) current).get();
+            }
+
             else
             {
                 final Object finalCurrent = current;
@@ -104,6 +111,11 @@ public class ObjectReferenceExpression implements Expression
                     current = null;
                 }
             }
+        }
+
+        if(current instanceof Supplier)
+        {
+            current = ((Supplier) current).get();
         }
 
         return current;

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class MainScope extends InternalScope
 {
@@ -24,6 +25,12 @@ public class MainScope extends InternalScope
         Builder ()
         {
             data = new HashMap<>();
+        }
+
+        public Builder with (String key, Supplier<Object> value)
+        {
+            data.put(key, value);
+            return this;
         }
 
         public Builder with (String key, Object value)
