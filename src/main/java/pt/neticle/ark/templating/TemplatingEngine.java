@@ -9,7 +9,9 @@ import pt.neticle.ark.templating.renderer.Scope;
 import pt.neticle.ark.templating.structure.ReadableElement;
 import pt.neticle.ark.templating.structure.TemplateRootElement;
 import pt.neticle.ark.templating.structure.expressions.ExpressionMatcher;
+import pt.neticle.ark.templating.structure.functions.DefaultFunctionHandler;
 import pt.neticle.ark.templating.structure.functions.FunctionCatalog;
+import pt.neticle.ark.templating.structure.functions.FunctionHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -295,17 +297,40 @@ public class TemplatingEngine
         private final Map<Path, Boolean> searchDirectories;
         private final Map<FileSystem, WatchService> watchServices;
         private final Map<WatchKey, Path> watchKeyPaths;
+        private final ExpressionMatcher expressionMatcher;
+        private final FunctionCatalog functionCatalog;
 
         Initializer ()
         {
             searchDirectories = new HashMap<>();
             watchServices = new HashMap<>();
             watchKeyPaths = new HashMap<>();
+            expressionMatcher = new ExpressionMatcher(functionCatalog = new FunctionCatalog());
         }
 
-        private WatchService getWatchService (FileSystem fs) throws IOException
+        /**
+         * Registers a function handler with the specified name.
+         *
+         * @param name The name of the function to register
+         * @param handler A handler to be called when the function is invoked
+         * @return
+         */
+        public Initializer withFunction (String name, FunctionHandler handler)
         {
-            return watchServices.computeIfAbsent(fs, CheckedFunction.rethrow((_fs) -> _fs.newWatchService()));
+            functionCatalog.registerHandler(name, handler);
+            return this;
+        }
+
+        /**
+         * Registers a function handler given a derivative of DefaultFunctionHandler.
+         *
+         * @param handler
+         * @return
+         */
+        public Initializer withFunction (DefaultFunctionHandler handler)
+        {
+            functionCatalog.registerHandler(handler);
+            return this;
         }
 
         /**
@@ -391,7 +416,7 @@ public class TemplatingEngine
          */
         public TemplatingEngine build () throws ParserConfigurationException, SAXException, IOException
         {
-            TemplatingEngine engine = new TemplatingEngine();
+            TemplatingEngine engine = new TemplatingEngine(new TemplateParser(), expressionMatcher);
 
             for(Map.Entry<Path, Boolean> entry : searchDirectories.entrySet())
             {
@@ -408,6 +433,11 @@ public class TemplatingEngine
             executor.shutdown();
 
             return engine;
+        }
+
+        private WatchService getWatchService (FileSystem fs) throws IOException
+        {
+            return watchServices.computeIfAbsent(fs, CheckedFunction.rethrow((_fs) -> _fs.newWatchService()));
         }
 
         private void handleFileObject (Path file, TemplatingEngine engine, boolean watch) throws IOException, ParserConfigurationException, SAXException
