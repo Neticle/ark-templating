@@ -20,6 +20,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 
 /**
  * The main object of the ark-templating library. It contains all registered templates as well as
@@ -299,6 +300,7 @@ public class TemplatingEngine
         private final Map<WatchKey, Path> watchKeyPaths;
         private final ExpressionMatcher expressionMatcher;
         private final FunctionCatalog functionCatalog;
+        private BiConsumer<Path, LoaderException> hotloadErrorHandler;
 
         Initializer ()
         {
@@ -306,6 +308,7 @@ public class TemplatingEngine
             watchServices = new HashMap<>();
             watchKeyPaths = new HashMap<>();
             expressionMatcher = new ExpressionMatcher(functionCatalog = new FunctionCatalog());
+            hotloadErrorHandler = (tplFile, e) -> {};
         }
 
         /**
@@ -403,6 +406,22 @@ public class TemplatingEngine
         public Initializer withSearchDirectories (Path... paths)
         {
             return withSearchDirectories(false, paths);
+        }
+
+        /**
+         * Sets a handler for exceptions thrown during an hot-reload attempt.
+         *
+         * Because the hot-reload watcher service runs in a background thread, the only way to those can reach
+         * the implementing code is to set an handler function here.
+         *
+         * @param handler An handler consumer that will be called everytime an exception during loading occurs. First
+         *                parameter is the path to the file that was being loaded and the second is the thrown exception.
+         * @return
+         */
+        public Initializer withHotloadErrorHandler (BiConsumer<Path, LoaderException> handler)
+        {
+            hotloadErrorHandler = handler;
+            return this;
         }
 
         /**
@@ -505,11 +524,20 @@ public class TemplatingEngine
                         {
                             try
                             {
-                                handleFileObject(base.resolve(((Path) ev.context())), engine, false);
-                            } catch(IOException | LoaderException e)
+                                try {
+                                    handleFileObject(base.resolve(((Path) ev.context())), engine, false);
+                                } catch(Exception e)
+                                {
+                                    if(e instanceof LoaderException)
+                                    {
+                                        throw (LoaderException) e;
+                                    }
+
+                                    throw new LoaderException((Path) ev.context(), e);
+                                }
+                            } catch(LoaderException e)
                             {
-                                // TODO: engine.removeTemplate(...)
-                                // Or other way to inform the template wasn't parsed.
+                                hotloadErrorHandler.accept((Path)ev.context(), e);
                             }
                         }
                     }
