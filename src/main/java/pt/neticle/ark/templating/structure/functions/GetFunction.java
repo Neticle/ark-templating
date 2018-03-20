@@ -17,6 +17,11 @@ public class GetFunction extends DefaultFunctionHandler<Object>
     @Override
     public Object apply (Object[] args) throws RenderingException
     {
+        if(args[0] == null || args[1] == null)
+        {
+            return null;
+        }
+
         ensureSignatureArgs(args, Object.class, String.class);
 
         if(args[0] instanceof Map)
