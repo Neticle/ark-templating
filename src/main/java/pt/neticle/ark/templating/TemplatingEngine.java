@@ -1,7 +1,7 @@
 package pt.neticle.ark.templating;
 
-import org.xml.sax.SAXException;
-import pt.neticle.ark.templating.exception.DiscoveryLoaderException;
+import pt.neticle.ark.templating.exception.LoaderException;
+import pt.neticle.ark.templating.exception.ParsingException;
 import pt.neticle.ark.templating.functional.CheckedFunction;
 import pt.neticle.ark.templating.parsing.DefaultTemplateParser;
 import pt.neticle.ark.templating.parsing.TemplateParser;
@@ -15,10 +15,8 @@ import pt.neticle.ark.templating.structure.functions.DefaultFunctionHandler;
 import pt.neticle.ark.templating.structure.functions.FunctionCatalog;
 import pt.neticle.ark.templating.structure.functions.FunctionHandler;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.file.*;
-import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -156,11 +154,10 @@ public class TemplatingEngine
      *
      * @return The tag-name of the newly defined custom element type.
      *
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
+     * @throws IOException Thrown for any errors while reading from the provided stream
+     * @throws ParsingException Thrown for any parser errors while parsing the provided declaration
      */
-    public String registerTemplate (InputStream is) throws IOException, SAXException, ParserConfigurationException, ParseException
+    public String registerTemplate (InputStream is) throws IOException, ParsingException
     {
         TemplateRootElement rootElement = templateParser.parse(new TemplateRootElement(this), is);
 
@@ -415,7 +412,7 @@ public class TemplatingEngine
          * @return
          * @throws IOException
          */
-        public TemplatingEngine build () throws IOException
+        public TemplatingEngine build () throws IOException, LoaderException
         {
             TemplatingEngine engine = new TemplatingEngine(new DefaultTemplateParser(), expressionMatcher);
 
@@ -441,7 +438,7 @@ public class TemplatingEngine
             return watchServices.computeIfAbsent(fs, CheckedFunction.rethrow((_fs) -> _fs.newWatchService()));
         }
 
-        private void handleFileObject (Path file, TemplatingEngine engine, boolean watch) throws IOException
+        private void handleFileObject (Path file, TemplatingEngine engine, boolean watch) throws IOException, LoaderException
         {
             if(!Files.exists(file))
             {
@@ -476,9 +473,9 @@ public class TemplatingEngine
             try
             {
                 engine.registerTemplate(Files.newInputStream(file));
-            } catch(SAXException | ParserConfigurationException | ParseException e)
+            } catch(ParsingException e)
             {
-                throw new DiscoveryLoaderException(file, e);
+                throw new LoaderException(file, e);
             }
         }
 
@@ -509,7 +506,7 @@ public class TemplatingEngine
                             try
                             {
                                 handleFileObject(base.resolve(((Path) ev.context())), engine, false);
-                            } catch(IOException e)
+                            } catch(IOException | LoaderException e)
                             {
                                 // TODO: engine.removeTemplate(...)
                                 // Or other way to inform the template wasn't parsed.

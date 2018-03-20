@@ -1,5 +1,6 @@
 package pt.neticle.ark.templating.parsing;
 
+import pt.neticle.ark.templating.exception.SanityException;
 import pt.neticle.ark.templating.structure.TemplateElement;
 import pt.neticle.ark.templating.structure.TemplateRootElement;
 
@@ -18,13 +19,13 @@ public class DefaultTemplateHandler implements TemplateHandler
     }
 
     @Override
-    public boolean startElement (String qName, Map<String, String> attributes) throws ParseException
+    public boolean startElement (String qName, Map<String, String> attributes) throws SanityException
     {
         if(rootElement == null)
         {
             if(!qName.equals("template"))
             {
-                throw new RuntimeException("Root element must be a template element");
+                throw new SanityException("Root element must be a template element");
             }
 
             currentElement = rootElement = providedTemplate;
@@ -38,14 +39,20 @@ public class DefaultTemplateHandler implements TemplateHandler
 
         for(Map.Entry<String,String> attr : attributes.entrySet())
         {
-            currentElement.setAttribute(attr.getKey(), rootElement.createText(attr.getValue()));
+            try
+            {
+                currentElement.setAttribute(attr.getKey(), rootElement.createText(attr.getValue()));
+            } catch(ParseException e)
+            {
+                throw new SanityException("Mal-formed expression", e);
+            }
         }
 
         return !qName.equals("script") && !attributes.containsKey("text-content");
     }
 
     @Override
-    public void textNode (String text) throws ParseException
+    public void textNode (String text) throws SanityException
     {
         if(currentElement != null)
         {
@@ -54,16 +61,24 @@ public class DefaultTemplateHandler implements TemplateHandler
                 text = text.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
             }
 
-            currentElement.addText(rootElement.createText(text));
+            try
+            {
+                currentElement.addText(rootElement.createText(text));
+            } catch(ParseException e)
+            {
+                throw new SanityException("Mal-formed expression", e);
+            }
         }
     }
 
     @Override
-    public void endElement (String qName) throws ParseException
+    public void endElement (String qName) throws SanityException
     {
         if(currentElement == null || !currentElement.getTagName().equals(qName))
         {
-            throw new ParseException("Closing tag mismatch. </" + qName + ">", 0);
+            throw new SanityException("Closing tag mismatch. </" + qName + "> found" +
+                (currentElement == null ? "." :
+                " while closing " + currentElement.getTagName() + " element."));
         }
 
         rootElement.elementReady(currentElement);

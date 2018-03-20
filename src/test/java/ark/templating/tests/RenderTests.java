@@ -9,6 +9,7 @@ import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
 import org.xmlunit.diff.Diff;
 import pt.neticle.ark.templating.TemplatingEngine;
+import pt.neticle.ark.templating.exception.ParsingException;
 import pt.neticle.ark.templating.renderer.MainScope;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,7 +88,7 @@ public class RenderTests
                 try
                 {
                     engine.registerTemplate(new ByteArrayInputStream(e.getValue().getBytes(StandardCharsets.UTF_8)));
-                } catch(IOException | SAXException | ParserConfigurationException | ParseException ex)
+                } catch(IOException | ParsingException ex)
                 {
                     Assert.fail(e.getClass().getSimpleName() + ": " + ex.getMessage());
                 }

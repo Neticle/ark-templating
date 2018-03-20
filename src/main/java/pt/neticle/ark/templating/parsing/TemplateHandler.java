@@ -1,6 +1,7 @@
 package pt.neticle.ark.templating.parsing;
 
-import java.text.ParseException;
+import pt.neticle.ark.templating.exception.SanityException;
+
 import java.util.Map;
 
 public interface TemplateHandler
@@ -14,18 +15,18 @@ public interface TemplateHandler
      * @return Return true to instruct the parser to continue parsing the element's children
      * normally, or false to instruct the parser to treat the element's content as text.
      *
-     * @throws ParseException
+     * @throws SanityException
      */
-    boolean startElement (String qName, Map<String, String> attributes) throws ParseException;
+    boolean startElement (String qName, Map<String, String> attributes) throws SanityException;
 
     /**
      * Invoked when a text node is encountered
      *
      * @param text The text encountered
      *
-     * @throws ParseException
+     * @throws SanityException
      */
-    void textNode (String text) throws ParseException;
+    void textNode (String text) throws SanityException;
 
     /**
      * Invoked at the end of an element declaration (closing-tag parsed)
@@ -37,7 +38,7 @@ public interface TemplateHandler
      *
      * @param qName The element name, will contain the full name with namespaces if present
      *
-     * @throws ParseException
+     * @throws SanityException
      */
-    void endElement (String qName) throws ParseException;
+    void endElement (String qName) throws SanityException;
 }

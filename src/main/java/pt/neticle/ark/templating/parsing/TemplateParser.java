@@ -1,9 +1,10 @@
 package pt.neticle.ark.templating.parsing;
 
+import pt.neticle.ark.templating.exception.ParsingException;
 import pt.neticle.ark.templating.structure.TemplateRootElement;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
 
 public interface TemplateParser
 {
@@ -14,7 +15,8 @@ public interface TemplateParser
      * @param provided A blank root element to be populated
      * @param is An input stream containing the template declaration in text format
      * @return The root element instance provided
-     * @throws ParseException
+     * @throws ParsingException Thrown for any errors during the parsing process
+     * @throws IOException Thrown for any errors reading from the provided stream
      */
-    TemplateRootElement parse (TemplateRootElement provided, InputStream is) throws ParseException;
+    TemplateRootElement parse (TemplateRootElement provided, InputStream is) throws ParsingException, IOException;
 }
