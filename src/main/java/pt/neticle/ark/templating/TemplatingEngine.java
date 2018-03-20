@@ -1,7 +1,9 @@
 package pt.neticle.ark.templating;
 
 import org.xml.sax.SAXException;
+import pt.neticle.ark.templating.exception.DiscoveryLoaderException;
 import pt.neticle.ark.templating.functional.CheckedFunction;
+import pt.neticle.ark.templating.parsing.DefaultTemplateParser;
 import pt.neticle.ark.templating.parsing.TemplateParser;
 import pt.neticle.ark.templating.renderer.InternalScope;
 import pt.neticle.ark.templating.renderer.PreprocessedRenderer;
@@ -16,6 +18,7 @@ import pt.neticle.ark.templating.structure.functions.FunctionHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.file.*;
+import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,7 +69,7 @@ public class TemplatingEngine
 
     public TemplatingEngine ()
     {
-        this(new TemplateParser(), new ExpressionMatcher(new FunctionCatalog()));
+        this(new DefaultTemplateParser(), new ExpressionMatcher(new FunctionCatalog()));
     }
 
     public TemplatingEngine (TemplateParser templateParser, ExpressionMatcher expressionMatcher)
@@ -157,7 +160,7 @@ public class TemplatingEngine
      * @throws SAXException
      * @throws ParserConfigurationException
      */
-    public String registerTemplate (InputStream is) throws IOException, SAXException, ParserConfigurationException
+    public String registerTemplate (InputStream is) throws IOException, SAXException, ParserConfigurationException, ParseException
     {
         TemplateRootElement rootElement = templateParser.parse(new TemplateRootElement(this), is);
 
@@ -410,13 +413,11 @@ public class TemplatingEngine
          * search directories.
          *
          * @return
-         * @throws ParserConfigurationException
-         * @throws SAXException
          * @throws IOException
          */
-        public TemplatingEngine build () throws ParserConfigurationException, SAXException, IOException
+        public TemplatingEngine build () throws IOException
         {
-            TemplatingEngine engine = new TemplatingEngine(new TemplateParser(), expressionMatcher);
+            TemplatingEngine engine = new TemplatingEngine(new DefaultTemplateParser(), expressionMatcher);
 
             for(Map.Entry<Path, Boolean> entry : searchDirectories.entrySet())
             {
@@ -440,7 +441,7 @@ public class TemplatingEngine
             return watchServices.computeIfAbsent(fs, CheckedFunction.rethrow((_fs) -> _fs.newWatchService()));
         }
 
-        private void handleFileObject (Path file, TemplatingEngine engine, boolean watch) throws IOException, ParserConfigurationException, SAXException
+        private void handleFileObject (Path file, TemplatingEngine engine, boolean watch) throws IOException
         {
             if(!Files.exists(file))
             {
@@ -472,7 +473,13 @@ public class TemplatingEngine
                 return;
             }
 
-            engine.registerTemplate(Files.newInputStream(file));
+            try
+            {
+                engine.registerTemplate(Files.newInputStream(file));
+            } catch(SAXException | ParserConfigurationException | ParseException e)
+            {
+                throw new DiscoveryLoaderException(file, e);
+            }
         }
 
         private void handleWatchService (WatchService service, TemplatingEngine engine)
@@ -502,7 +509,7 @@ public class TemplatingEngine
                             try
                             {
                                 handleFileObject(base.resolve(((Path) ev.context())), engine, false);
-                            } catch(IOException | ParserConfigurationException | SAXException e)
+                            } catch(IOException e)
                             {
                                 // TODO: engine.removeTemplate(...)
                                 // Or other way to inform the template wasn't parsed.

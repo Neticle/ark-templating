@@ -4,4 +4,26 @@
     <template is="foreach" data="{{ = tags }}" as="tag">
         <p>Repeat me {{ = tag }}</p>
     </template>
+
+    <coco />
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous" />
+
+    <script type="text/javascript">
+            document.addEventListener("DOMContentLoaded", function(e)
+            {
+                // > < < >
+                console.log("loaded");
+
+                for(var snippet of document.querySelectorAll('pre code'))
+                {
+                    if(snippet.innerHTML.length > 750)
+                    {
+                        snippet.className += ' expand';
+                    }
+                }
+            });
+    </script>
 </template>

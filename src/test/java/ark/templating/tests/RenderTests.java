@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,7 +87,7 @@ public class RenderTests
                 try
                 {
                     engine.registerTemplate(new ByteArrayInputStream(e.getValue().getBytes(StandardCharsets.UTF_8)));
-                } catch(IOException | SAXException | ParserConfigurationException ex)
+                } catch(IOException | SAXException | ParserConfigurationException | ParseException ex)
                 {
                     Assert.fail(e.getClass().getSimpleName() + ": " + ex.getMessage());
                 }

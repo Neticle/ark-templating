@@ -243,7 +243,7 @@ public class PreprocessedInstructionSet
             return;
         }
 
-        appendRawOutput(text.getContent().replace("<", "&lt;").replace(">", "&gt;"));
+        appendRawOutput(text.getContent());
     }
 
     private void appendRawOutput (String str)
