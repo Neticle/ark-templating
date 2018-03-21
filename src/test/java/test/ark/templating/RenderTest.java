@@ -1,4 +1,4 @@
-package ark.templating.tests;
+package test.ark.templating;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +26,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RenderTests
+public class RenderTest
 {
     @Test
     public void testRenderFiles () throws URISyntaxException, IOException

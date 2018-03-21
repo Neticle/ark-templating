@@ -1,4 +1,4 @@
-package ark.templating.tests;
+package test.ark.templating;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,11 +8,11 @@ import pt.neticle.ark.templating.structure.functions.FunctionCatalog;
 
 import java.text.ParseException;
 
-public class Expressions
+public class ExpressionsTest
 {
     private final ExpressionMatcher matcher;
 
-    public Expressions ()
+    public ExpressionsTest ()
     {
         matcher = new ExpressionMatcher(new FunctionCatalog());
     }
