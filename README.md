@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Neticle/ark-templating.svg?branch=master)](https://travis-ci.org/Neticle/ark-templating)
+
 # Introduction
 
 Ark Templating is a HTML rendering Java library inspired by the WebComponents/HTML Templates spec. It 
