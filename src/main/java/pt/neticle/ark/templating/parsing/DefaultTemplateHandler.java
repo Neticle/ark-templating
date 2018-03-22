@@ -81,6 +81,8 @@ public class DefaultTemplateHandler implements TemplateHandler
                 " while closing " + currentElement.getTagName() + " element."));
         }
 
+        currentElement.removeAttribute("text-content");
+
         rootElement.elementReady(currentElement);
         currentElement = currentElement.getParent();
     }
