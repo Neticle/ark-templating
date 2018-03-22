@@ -156,19 +156,20 @@ public class DefaultTemplateParser implements TemplateParser
                 // - we encounter the closing '>' character
                 // - what we've collected so far makes sense as a tag
 
-                handlePossibleTag(ctx.getBufferString().trim().substring(1), ctx, handler);
-
                 ctx.setStateTagOpen(false);
-                ctx.resetBuffer();
 
-                return false;
+                if(handlePossibleTag(ctx.getBufferString().trim().substring(1), ctx, handler))
+                {
+                    ctx.resetBuffer();
+                    return false;
+                }
             }
         }
 
         return true;
     }
 
-    private void handlePossibleTag (String tagBody, TemplateParserContext ctx, TemplateHandler handler) throws SanityException
+    private boolean handlePossibleTag (String tagBody, TemplateParserContext ctx, TemplateHandler handler) throws SanityException
     {
         String tagName;
         boolean closeTag = tagBody.matches("^\\s*/.*");
@@ -177,6 +178,8 @@ public class DefaultTemplateParser implements TemplateParser
         if(closeTag)
         {
             handler.endElement(tagBody.substring(tagBody.indexOf('/') + 1).trim());
+
+            return true;
         }
 
         else
@@ -215,7 +218,11 @@ public class DefaultTemplateParser implements TemplateParser
 
                     ctx.enableTextOnlyState(Pattern.compile("([\\S\\s]*)</" + Pattern.quote(tagName) + ">$"), tagName);
                 }
+
+                return true;
             }
         }
+
+        return false;
     }
 }
