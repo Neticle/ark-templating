@@ -6,6 +6,8 @@ public interface Element extends ReadableElement
 
     void setAttribute (String qualifiedName, ReadableText text);
 
+    void removeAttribute (String qualifiedName);
+
     void addChild (ReadableElement child);
 
     void addText (ReadableText text);

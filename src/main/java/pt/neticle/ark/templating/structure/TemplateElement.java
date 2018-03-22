@@ -48,6 +48,12 @@ public class TemplateElement extends TemplateNode implements Element
     }
 
     @Override
+    public void removeAttribute (String qualifiedName)
+    {
+        attributes.remove(qualifiedName);
+    }
+
+    @Override
     public final void addChild (ReadableElement child)
     {
         if(child instanceof TemplateElement)
