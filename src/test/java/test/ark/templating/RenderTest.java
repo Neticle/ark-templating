@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
-import org.xml.sax.SAXException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
 import org.xmlunit.diff.Diff;
@@ -12,7 +13,6 @@ import pt.neticle.ark.templating.TemplatingEngine;
 import pt.neticle.ark.templating.exception.ParsingException;
 import pt.neticle.ark.templating.renderer.MainScope;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Source;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,16 +22,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+@RunWith(Parameterized.class)
 public class RenderTest
 {
-    @Test
-    public void testRenderFiles () throws URISyntaxException, IOException
+    @Parameterized.Parameters
+    public static Collection<Object[]> data () throws URISyntaxException, IOException
     {
-        Path base = Paths.get(getClass().getResource("/render-tests").toURI());
+        List<Object[]> testPaths = new LinkedList<>();
+
+        Path base = Paths.get(RenderTest.class.getResource("/render-tests").toURI());
 
         if(!Files.isDirectory(base))
         {
@@ -40,11 +41,21 @@ public class RenderTest
 
         for(Path file : Files.newDirectoryStream(base, "*.test.html"))
         {
-            testRenderFile(file);
+            testPaths.add(new Object[]{file});
         }
+
+        return testPaths;
     }
 
-    private void testRenderFile (Path file) throws IOException
+    private Path file;
+
+    public RenderTest (Path file)
+    {
+        this.file = file;
+    }
+
+    @Test
+    public void testExpectedOutput () throws IOException
     {
         String[] lines = Files.lines(file, StandardCharsets.UTF_8).toArray(String[]::new);
 
